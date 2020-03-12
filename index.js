@@ -24,18 +24,22 @@ const compare = require('tsscmp');
 module.exports = function(opts){
   opts = opts || {};
 
-  if (!opts.name && !opts.pass)
-    throw new Error('Basic auth `name` and/or `pass` is required');
+  // if (!opts.name && !opts.pass)
+  //   throw new Error('Basic auth `name` and/or `pass` is required');
 
   if (!opts.realm) opts.realm = 'Secure Area';
 
   return function basicAuth(ctx, next) {
     const user = auth(ctx);
-    if (
-      !user ||
-      (opts.name && !compare(opts.name, user.name)) ||
-      (opts.pass && !compare(opts.pass, user.pass))
-    )
+    let flag = false ;
+    for(const opt of opts ){
+      if (user && (opt.name && compare(opt.name, user.name)) && (opt.pass && compare(opt.pass, user.pass))){
+        flag = true ;
+        break ;
+      }
+    }
+
+    if(!flag){
       return ctx.throw(
         401,
         null,
@@ -45,6 +49,9 @@ module.exports = function(opts){
           }
         }
       );
+    }
+
+    
     return next();
   };
 };
